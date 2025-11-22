@@ -71,3 +71,100 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+# Personality Prediction Project
+
+## Overview
+
+This project is a personality prediction system built using Django (backend) and a frontend framework. It uses several ML models to predict personality traits and analyze speech emotion.
+
+## Project Structure
+
+project/
+├─ backend/
+│ └─ personality_app/
+│ └─ models/
+│ ├─ microsoft_model/
+│ │ └─ model.safetensors
+│ ├─ bigfive-regression-model/
+│ │ └─ model.safetensors
+│ └─ SpeechEmotionModel/
+│ ├─ 312weight.h5
+│ └─ \_mini_XCEPTION.102-0.66.hdf5
+├─ frontend/
+│ └─ ...
+└─ .gitignore
+
+bash
+Copy code
+
+## Setup Instructions
+
+### 1. Clone the repository
+
+````bash
+git clone https://github.com/Shafaq41336/personality-prediction.git
+cd personality-prediction
+
+2. Create Python virtual environment
+bash
+Copy code
+python -m venv venv
+# Activate the environment
+# Windows:
+venv\Scripts\activate
+# Linux/Mac:
+source venv/bin/activate
+
+3. Install dependencies
+bash
+Copy code
+pip install -r requirements.txt
+
+4. Download models
+The ML models are not included in GitHub due to their large size.
+
+Please download the following models from the shared link:
+Download all models
+
+After downloading, place them in the exact folder paths:
+
+swift
+Copy code
+backend/personality_app/models/microsoft_model/model.safetensors
+backend/personality_app/models/bigfive-regression-model/model.safetensors
+backend/personality_app/models/SpeechEmotionModel/312weight.h5
+backend/personality_app/models/SpeechEmotionModel/_mini_XCEPTION.102-0.66.hdf5
+
+5. Run the project
+For Django backend:
+
+bash
+Copy code
+python manage.py runserver
+Then open your frontend in the browser (if separate server is needed) or visit the URL provided by Django.
+
+Notes
+.gitignore prevents large files and virtual environment from being uploaded to GitHub.
+
+Make sure the models are placed correctly, otherwise the project will throw file not found errors.
+
+Only tracked files (code, configurations) are in the repo.
+
+Contact
+For any issues, contact Shafaq.
+
+yaml
+Copy code
+
+---
+
+After saving, don’t forget to **commit and push** to GitHub:
+
+```bash
+git add README.md
+git commit -m "Add complete README with setup and model instructions"
+git push
+
+This will ensure your team members have all instructions and can run the project correctly after downloading.
+````
