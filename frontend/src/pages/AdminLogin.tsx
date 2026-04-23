@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { ShieldCheck, Lock, Mail } from "lucide-react";
 
 const AdminLogin = () => {
-  const [email, setEmail] = useState("admin@personality-prediction.com");
-  const [password, setPassword] = useState("admin@123");
+  const [email, setEmail] = useState("admin@personality.com");
+  const [password, setPassword] = useState("Admin@1234");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -19,75 +20,120 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      // Use backend authentication
       await login(email, password);
-      
-      // Note: isAdmin state updates after component re-render
-      // For immediate check, we verify in the response
-      toast({ 
-        title: "Login successful",
-        description: "Welcome to Admin Dashboard"
-      });
-      
-      // Navigate to admin dashboard (route will verify admin status)
-      setTimeout(() => navigate("/admin/dashboard"), 100);
+
+      // Check admin after a tick (state update is async)
+      setTimeout(() => {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          toast({
+            title: "Login failed",
+            description: "No token received",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Decode JWT to check is_admin without extra API call
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          if (!payload.is_admin) {
+            toast({
+              title: "Access Denied",
+              description: "This account does not have admin privileges",
+              variant: "destructive",
+            });
+            localStorage.removeItem("access_token");
+            setLoading(false);
+            return;
+          }
+        } catch (_) {}
+
+        localStorage.setItem("admin_logged_in", "true");
+        toast({
+          title: "✅ Login successful",
+          description: "Welcome to the Admin Dashboard",
+        });
+        navigate("/admin/dashboard");
+        setLoading(false);
+      }, 200);
     } catch (error: any) {
       toast({
         title: "Login failed",
         description: error.message || "Invalid email or password",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-main px-4">
-      <form
-        onSubmit={handleLogin}
-        className="bg-card border border-border p-8 rounded-lg w-full max-w-md shadow-lg space-y-6"
-      >
-        <h2 className="text-2xl font-bold text-white text-center">
-          Admin Login
-        </h2>
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-foreground">
-            Email
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="bg-secondary/30 border-border"
-          />
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-accent/20 border border-accent/40 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <ShieldCheck className="w-8 h-8 text-accent" />
+          </div>
+          <h1 className="text-3xl font-bold text-white">Admin Portal</h1>
+          <p className="text-gray-400 mt-2">Sign in to manage the dashboard</p>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="password" className="text-foreground">
-            Password
-          </Label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="bg-secondary/30 border-border"
-          />
-        </div>
-        <Button
-          type="submit"
-          className="w-full bg-accent text-[#1B1F3B] hover:bg-accent/90"
-          disabled={loading}
+
+        <form
+          onSubmit={handleLogin}
+          className="bg-card border border-border p-8 rounded-2xl shadow-2xl space-y-5"
         >
-          {loading ? "Logging in..." : "Login"}
-        </Button>
-        <p className="text-gray-400 text-sm text-center">
-          Demo credentials are pre-filled. Click Login to continue.
-        </p>
-      </form>
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-foreground flex items-center gap-2">
+              <Mail className="w-4 h-4" /> Email
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="admin@personality.com"
+              className="bg-secondary/30 border-border"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-foreground flex items-center gap-2">
+              <Lock className="w-4 h-4" /> Password
+            </Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="Enter admin password"
+              className="bg-secondary/30 border-border"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full bg-accent text-[#1B1F3B] hover:bg-accent/90 font-semibold py-3"
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <span className="animate-spin w-4 h-4 border-2 border-[#1B1F3B] border-t-transparent rounded-full" />
+                Signing in…
+              </span>
+            ) : (
+              "Sign In"
+            )}
+          </Button>
+
+          <p className="text-gray-500 text-xs text-center mt-2">
+            Default: admin@personality.com / Admin@1234
+          </p>
+        </form>
+      </div>
     </div>
   );
 };

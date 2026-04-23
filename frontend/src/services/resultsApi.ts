@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://localhost:8000/api';
+// API base for Node.js backend at port 5000
+const API_BASE_URL = 'http://localhost:5000/api';
 
 export interface PersonalityResult {
   text_result?: any;
@@ -9,11 +10,7 @@ export interface PersonalityResult {
 
 export interface StoredTestResult {
   id: number;
-  user: {
-    id: number;
-    username: string;
-    email: string;
-  };
+  user_id: number;
   text_result?: any;
   voice_result?: any;
   face_result?: any;
@@ -32,10 +29,7 @@ class ResultsService {
     };
   }
 
-  private async makeRequest<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     const response = await fetch(url, {
       ...options,
@@ -54,7 +48,7 @@ class ResultsService {
   }
 
   async saveTestResult(result: PersonalityResult): Promise<StoredTestResult> {
-    return this.makeRequest<StoredTestResult>('/results/save/', {
+    return this.makeRequest<StoredTestResult>('/results/save', {
       method: 'POST',
       body: JSON.stringify(result),
     });
@@ -73,7 +67,7 @@ class ResultsService {
     const params = new URLSearchParams();
     params.set('page', String(page));
     params.set('page_size', String(pageSize));
-    return this.makeRequest(`/results/?${params.toString()}`);
+    return this.makeRequest(`/results?${params.toString()}`);
   }
 }
 

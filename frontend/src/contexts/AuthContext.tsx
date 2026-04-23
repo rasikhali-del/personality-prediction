@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+// ─── Point to the Node.js backend on port 5000 ───────────────────────────────
+const API_BASE_URL = 'http://localhost:5000/api';
 
 interface User {
   id: number;
   username: string;
   email: string;
-  is_staff: boolean;
-  is_superuser: boolean;
+  is_admin: boolean;
 }
 
 interface AuthContextType {
@@ -39,19 +39,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const isAuthenticated = !!user;
-  const isAdmin = user?.is_superuser || false;
+  const isAdmin = user?.is_admin || false;
 
+  // ── Validate stored token on mount ─────────────────────────────────────────
   useEffect(() => {
     const initializeAuth = async () => {
-      const accessToken = localStorage.getItem('access_token');
-      if (accessToken) {
+      const token = localStorage.getItem('access_token');
+      if (token) {
         try {
-          // Validate token by making a request to a protected endpoint
-          const response = await fetch(`${API_BASE_URL}/auth/me/`, {
-            method: 'GET',
+          const response = await fetch(`${API_BASE_URL}/auth/me`, {
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${accessToken}`,
+              Authorization: `Bearer ${token}`,
             },
           });
           if (response.ok) {
@@ -59,12 +58,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setUser(data.user);
           } else {
             localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
           }
         } catch (error) {
           console.error('Auth initialization error:', error);
           localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
         }
       }
       setIsLoading(false);
@@ -73,12 +70,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, []);
 
+  // ── Login ───────────────────────────────────────────────────────────────────
   const login = async (email: string, password: string) => {
-    const response = await fetch(`${API_BASE_URL}/auth/login/`, {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
 
@@ -88,17 +84,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     const data = await response.json();
-    localStorage.setItem('access_token', data.tokens.access);
-    localStorage.setItem('refresh_token', data.tokens.refresh);
+    localStorage.setItem('access_token', data.token);
     setUser(data.user);
   };
 
-  const register = async (username: string, email: string, password: string, confirmPassword: string) => {
-    const response = await fetch(`${API_BASE_URL}/auth/register/`, {
+  // ── Register ────────────────────────────────────────────────────────────────
+  const register = async (
+    username: string,
+    email: string,
+    password: string,
+    confirmPassword: string
+  ) => {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, email, password, confirm_password: confirmPassword }),
     });
 
@@ -108,14 +107,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     const data = await response.json();
-    localStorage.setItem('access_token', data.tokens.access);
-    localStorage.setItem('refresh_token', data.tokens.refresh);
+    localStorage.setItem('access_token', data.token);
     setUser(data.user);
   };
 
+  // ── Logout ──────────────────────────────────────────────────────────────────
   const logout = () => {
     localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
     setUser(null);
   };
 
@@ -128,14 +126,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
   };
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Helper functions
-export const getAccessToken = (): string | null => {
-  return localStorage.getItem('access_token');
-};
-
-export const getRefreshToken = (): string | null => {
-  return localStorage.getItem('refresh_token');
-};
+// ── Helper ──────────────────────────────────────────────────────────────────
+export const getAccessToken = (): string | null => localStorage.getItem('access_token');
