@@ -18,8 +18,11 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { resultsService } from "@/services/resultsApi";
+import { useAuth } from "@/contexts/AuthContext";
 
 const TestInterface = () => {
+  const { user, isAuthenticated } = useAuth();
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingComplete, setRecordingComplete] = useState(false);
@@ -392,9 +395,7 @@ const TestInterface = () => {
               JSON.stringify(fusionResults.fusion)
             );
             console.log("🎯 FUSION RESULTS STORED:", fusionResults.fusion);
-          }
-
-          toast({
+          }          toast({
             title: "🎯 Multimodal Analysis Complete!",
             description: `Analyzed ${
               fusionResults.fusion?.modalities_used || 0
@@ -402,6 +403,25 @@ const TestInterface = () => {
               fusionResults.fusion?.confidence * 100
             ).toFixed(0)}% confidence.`,
           });
+
+          // Save results to backend if user is authenticated
+          if (isAuthenticated && user) {
+            try {
+              await resultsService.saveTestResult({
+                text_result: fusionResults.text || null,
+                voice_result: fusionResults.voice || null,
+                face_result: fusionResults.face || null,
+                fusion_result: fusionResults.fusion || null,
+              });
+              console.log("✅ Results saved to backend");
+            } catch (error) {
+              console.error("Failed to save results to backend:", error);
+              toast({
+                title: "⚠️ Warning",
+                description: "Results analyzed but not saved to server. They're saved locally.",
+              });
+            }
+          }
 
           setTimeout(() => {
             setIsSubmitting(false);

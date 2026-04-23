@@ -112,18 +112,25 @@ const Footer = () => {
             </div>
           </div>
         </div>
+        
 
-        {/* Bottom Bar */}
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm">
-            © 2024 AI Personality Predictor. All rights reserved.
-          </p>
-          <div className="flex items-center space-x-4 mt-4 md:mt-0">
-            <span className="text-gray-400 text-sm">
-              AI-Powered Personality Analysis
-            </span>
-          </div>
-        </div>
+  <p className="text-gray-400 text-sm">
+    © 2024 AI Personality Predictor. All rights reserved.
+  </p>
+  <div className="flex items-center space-x-4 mt-4 md:mt-0">
+    <span className="text-gray-400 text-sm">
+      AI-Powered Personality Analysis
+    </span>
+    {/* ADMIN LINK */}
+    <a
+      href="/admin/login"
+      className="text-accent underline hover:text-white text-sm"
+    >
+      Admin Panel
+    </a>
+  </div>
+</div>
       </div>
     </footer>
   );

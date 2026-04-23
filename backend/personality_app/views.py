@@ -1,13 +1,19 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+from .models import TestResult
+from .serializers import UserSerializer, TestResultSerializer
 from .models.predict_bigfive import predict_text_traits
 from .models.voice_model import predict_voice_traits
 from .models.facetest import predict_face_traits
 from .models.fusion import fuse_all, average_face_expressions
-# No complex serializers needed - returning direct JSON responses
 import uuid
 import json
 
@@ -189,4 +195,5 @@ def health_check(request):
             'face': '_mini_XCEPTION'
         }
     }))
+
 

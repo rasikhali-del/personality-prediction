@@ -1,9 +1,21 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FileText, Mic, Smile, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import AuthModal from "@/components/AuthModal";
 
 const HeroSection = () => {
+  const { isAuthenticated } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  const handleStartTest = () => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+    }
+  };
+
   return (
     <section
       id="home"
@@ -30,14 +42,24 @@ const HeroSection = () => {
             facial analysis
           </p>
 
-          <Link to="/test">
+          {isAuthenticated ? (
+            <Link to="/test">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-primary to-accent text-white text-lg px-8 py-4 rounded-full hover:scale-105 transition-transform animate-pulse-glow mb-16"
+              >
+                Start Test
+              </Button>
+            </Link>
+          ) : (
             <Button
+              onClick={handleStartTest}
               size="lg"
               className="bg-gradient-to-r from-primary to-accent text-white text-lg px-8 py-4 rounded-full hover:scale-105 transition-transform animate-pulse-glow mb-16"
             >
               Start Test
             </Button>
-          </Link>
+          )}
         </div>
 
         {/* Analysis Cards - Static Design */}
@@ -80,9 +102,7 @@ const HeroSection = () => {
               personality
             </p>
           </Card>
-        </div>
-
-        {/* Stats */}
+        </div>        {/* Stats */}
         <div className="mt-16 text-center">
           <p className="text-accent text-lg font-medium">
             <span className="text-2xl font-bold">10,000+</span> users have
@@ -90,6 +110,13 @@ const HeroSection = () => {
           </p>
         </div>
       </div>
+      
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        defaultTab="signup"
+      />
     </section>
   );
 };

@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,27 +17,56 @@ const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }: AuthModalProps) =>
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { login, register } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email.trim() || !password.trim()) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
-    // Simulate login process
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await login(email, password);
       toast({
         title: "Login Successful!",
-        description: `Welcome back, ${email.split('@')[0]}!`,
+        description: `Welcome back!`,
       });
+      setEmail('');
+      setPassword('');
       onClose();
-    }, 1500);
+    } catch (error: any) {
+      toast({
+        title: "Login Failed",
+        description: error.message || "Invalid email or password",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!username.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive"
+      });
+      return;
+    }
     
     if (password !== confirmPassword) {
       toast({
@@ -47,24 +77,46 @@ const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }: AuthModalProps) =>
       return;
     }
     
+    if (password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
-    // Simulate signup process
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await register(username, email, password, confirmPassword);
       toast({
         title: "Account Created!",
-        description: `Welcome to AI Personality, ${name}!`,
+        description: `Welcome to AI Personality, ${username}!`,
       });
+      setUsername('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
       onClose();
-    }, 1500);
+    } catch (error: any) {
+      toast({
+        title: "Signup Failed",
+        description: error.message || "Failed to create account",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md bg-card border border-border">
         <DialogHeader>
           <DialogTitle className="text-white text-center">Welcome to AI Personality</DialogTitle>
+          <DialogDescription className="text-center text-gray-400">
+            Create an account or login to access your personality assessment results
+          </DialogDescription>
         </DialogHeader>
         
         <Tabs defaultValue={defaultTab} className="w-full">
@@ -108,17 +160,16 @@ const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }: AuthModalProps) =>
               </Button>
             </form>
           </TabsContent>
-          
-          <TabsContent value="signup" className="space-y-4 mt-6">
+            <TabsContent value="signup" className="space-y-4 mt-6">
             <form onSubmit={handleSignup} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-foreground">Full Name</Label>
+                <Label htmlFor="username" className="text-foreground">Username</Label>
                 <Input
-                  id="name"
+                  id="username"
                   type="text"
-                  placeholder="Enter your full name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Choose a username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                   className="bg-secondary/20 border-border text-foreground"
                 />
@@ -140,7 +191,7 @@ const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }: AuthModalProps) =>
                 <Input
                   id="signup-password"
                   type="password"
-                  placeholder="Create a password"
+                  placeholder="Create a password (min 6 chars)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
